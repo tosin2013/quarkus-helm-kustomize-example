@@ -11,6 +11,13 @@ for service in "${microservices[@]}"; do
     echo "Creating Helm chart for $service"
     mkdir -p kustomize/base/$service/helm
     helm create kustomize/base/$service/helm
+
+    # Update values.yaml to include the name field
+    cat <<EOF > kustomize/base/$service/helm/values.yaml
+name: $service
+replicas: 1
+image: nginx:1.16.0
+EOF
 done
 
 # Step 2: Clean up Helm charts by keeping only necessary templates (deployment, service, pod)
