@@ -64,20 +64,25 @@ for env in "${environments[@]}"; do
         cat <<EOF > kustomize/overlays/$env/$service/kustomization.yaml
 resources:
   - ../../../base/$service
-patchesStrategicMerge:
-  - values-$env.yaml
+patches:
+  - path: values-$env.yaml
+    target:
+      kind: Deployment
 EOF
 
         # Generate values overrides for each environment
         cat <<EOF > kustomize/overlays/$env/$service/values-$env.yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: $service-$env-config
-data:
-  replicas: "2"
-  name: "$env-$service"
-  image: "nginx:1.16.0"
+  name: $service-$env
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: $service
+        image: nginx:1.16.0
 EOF
     done
 done
