@@ -114,4 +114,52 @@ for env in "${environments[@]}"; do
     done
 done
 
+# Function to create ArgoCD application manifests
+create_argocd_application() {
+    local env=$1
+    local service=$2
+    local namespace="default"  # Modify this if you use a different namespace
+
+    echo "Creating ArgoCD application manifest for $service in $env environment"
+    cat <<EOF > result/$env/$service-argocd-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: $service-$env
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-repo/your-repo.git  # Replace with your repo URL
+    targetRevision: HEAD
+    path: kustomize/overlays/$env/$service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: $namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+EOF
+}
+
+# Step 6: Build Kustomize manifests for each environment and microservice
+for env in "${environments[@]}"; do
+    for service in "${microservices[@]}"; do
+        echo "Building Kustomize manifests for $service in $env environment"
+        mkdir -p result/$env
+        kustomize build kustomize/overlays/$env/$service > result/$env/$service.yaml
+
+        # Check if the build was successful
+        if [[ $? -eq 0 ]]; then
+            echo "$env/$service build succeeded!"
+        else
+            echo "$env/$service build failed."
+        fi
+
+        # Create ArgoCD application manifest
+        create_argocd_application $env $service
+    done
+done
+
 echo "All Kustomize builds complete!"
