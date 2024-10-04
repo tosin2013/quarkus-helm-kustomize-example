@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: microservice2-dev-config
+data:
+  replicas: "2"
+  name: "dev-microservice2"
+  image: "nginx:1.16.0"

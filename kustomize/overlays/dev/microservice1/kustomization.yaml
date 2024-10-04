@@ -1,0 +1,4 @@
+resources:
+  - ../../../base/microservice1
+patchesStrategicMerge:
+  - values-dev.yaml

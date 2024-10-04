@@ -1,115 +1,101 @@
 #!/bin/bash
 
-# Build a Helm chart first with the Helm command
-helm create ziggy
+# Array of microservices
+microservices=("microservice1" "microservice2")
 
-# Run the following commands to view if your chart is rendering properly
-helm template web ./ziggy
+# Array of environments
+environments=("dev" "prod" "qa")
 
-# I am only going to make use of the deployment, service, and pods, so all other templates I am going to delete.
-rm -rf ziggy/templates/*
+# Step 1: Create Helm charts for each microservice in base directory
+for service in "${microservices[@]}"; do
+    echo "Creating Helm chart for $service"
+    mkdir -p kustomize/base/$service/helm
+    helm create kustomize/base/$service/helm
+done
 
-# Create the necessary directories
-mkdir -p manifest overlays/dev overlays/prod
+# Step 2: Clean up Helm charts by keeping only necessary templates (deployment, service, pod)
+for service in "${microservices[@]}"; do
+    echo "Cleaning up Helm templates for $service"
+    rm -rf kustomize/base/$service/helm/templates/*
+    # Generate new basic templates
+    cat <<EOF > kustomize/base/$service/helm/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      containers:
+      - name: {{ .Values.name }}
+        image: {{ .Values.image }}
+        ports:
+        - containerPort: 80
+EOF
+done
 
-# Generate the Helm chart output
-helm template web ziggy > manifest/backend.yaml
+# Step 3: Generate Helm output using helm template for each microservice into base directory
+for service in "${microservices[@]}"; do
+    echo "Generating Helm output for $service"
+    helm template $service kustomize/base/$service/helm > kustomize/base/$service/backend.yaml
+done
 
-# Define the kustomize file under manifests
-cat <<EOF > manifest/kustomization.yaml
+# Step 4: Set up base kustomization.yaml for each microservice
+for service in "${microservices[@]}"; do
+    echo "Creating base kustomization.yaml for $service"
+    cat <<EOF > kustomize/base/$service/kustomization.yaml
 resources:
-  - "backend.yaml"
+  - backend.yaml
 EOF
+done
 
-# Create the kustomization file for dev environment
-cat <<EOF > overlays/dev/kustomization.yaml
+# Step 5: Create directories for dev, prod, qa overlays and configure kustomization.yaml and patches
+for env in "${environments[@]}"; do
+    for service in "${microservices[@]}"; do
+        echo "Setting up $env overlay for $service"
+        mkdir -p kustomize/overlays/$env/$service
+        cat <<EOF > kustomize/overlays/$env/$service/kustomization.yaml
 resources:
-  - "../../manifest/"
-patches:
-  - path: ./patch-deploy.yaml
-    target:
-      kind: Deployment
-  - path: ./patch-service.yaml
-    target:
-      kind: Service
-  - path: ./patch-pod.yaml
-    target:
-      kind: Pod
+  - ../../../base/$service
+patchesStrategicMerge:
+  - values-$env.yaml
 EOF
 
-# Create the patch files for dev environment
-cat <<EOF > overlays/dev/patch-deploy.yaml
-- op: replace
-  path: /metadata/name
-  value: dev-ziggy-deployment
-- op: add
-  path: /spec/template/spec/containers/0/resources
-  value:
-    limits:
-      cpu: "0.5"
-      memory: "512Mi"
-    requests:
-      cpu: "0.2"
-      memory: "256Mi"
+        # Generate values overrides for each environment
+        cat <<EOF > kustomize/overlays/$env/$service/values-$env.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: $service-$env-config
+data:
+  replicas: "2"
+  name: "$env-$service"
+  image: "nginx:1.16.0"
 EOF
+    done
+done
 
-cat <<EOF > overlays/dev/patch-service.yaml
-- op: replace
-  path: /metadata/name
-  value: dev-ziggy-service
-EOF
+# Step 6: Build Kustomize manifests for each environment and microservice
+for env in "${environments[@]}"; do
+    for service in "${microservices[@]}"; do
+        echo "Building Kustomize manifests for $service in $env environment"
+        mkdir -p result/$env
+        kustomize build kustomize/overlays/$env/$service > result/$env/$service.yaml
 
-cat <<EOF > overlays/dev/patch-pod.yaml
-- op: replace
-  path: /metadata/name
-  value: dev-ziggy-pod
-EOF
+        # Check if the build was successful
+        if [[ $? -eq 0 ]]; then
+            echo "$env/$service build succeeded!"
+        else
+            echo "$env/$service build failed."
+        fi
+    done
+done
 
-# Create the kustomization file for prod environment
-cat <<EOF > overlays/prod/kustomization.yaml
-resources:
-  - "../../manifest/"
-patches:
-  - path: ./patch-deploy.yaml
-    target:
-      kind: Deployment
-  - path: ./patch-service.yaml
-    target:
-      kind: Service
-  - path: ./patch-pod.yaml
-    target:
-      kind: Pod
-EOF
-
-# Create the patch files for prod environment
-cat <<EOF > overlays/prod/patch-deploy.yaml
-- op: replace
-  path: /metadata/name
-  value: prod-ziggy-deployment
-- op: add
-  path: /spec/template/spec/containers/0/resources
-  value:
-    limits:
-      cpu: "3.0"
-      memory: "2Gi"
-    requests:
-      cpu: "1.0"
-      memory: "1Gi"
-EOF
-
-cat <<EOF > overlays/prod/patch-service.yaml
-- op: replace
-  path: /metadata/name
-  value: prod-ziggy-service
-EOF
-
-cat <<EOF > overlays/prod/patch-pod.yaml
-- op: replace
-  path: /metadata/name
-  value: prod-ziggy-pod
-EOF
-
-# Generate the final manifests for dev and prod environments
-mkdir -p result
-kustomize build overlays/dev > result/dev-result.yaml
-kustomize build overlays/prod > result/prod-result.yaml
+echo "All Kustomize builds complete!"
