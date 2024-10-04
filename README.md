@@ -4,20 +4,24 @@ Welcome to the GitOps lab! In this lab, you will learn how to manage Helm charts
 
 ## Table of Contents
 
-1. [Lab Overview](#lab-overview)
-2. [Prerequisites](#prerequisites)
-3. [Lab Setup](#lab-setup)
-4. [Lab Exercises](#lab-exercises)
-   - [Exercise 1: Clone the Repository](#exercise-1-clone-the-repository)
-   - [Exercise 2: Initialize the Environment](#exercise-2-initialize-the-environment)
-   - [Exercise 3: Install ArgoCD in OpenShift](#exercise-3-install-argocd-in-openshift)
-   - [Exercise 4: Access ArgoCD UI](#exercise-4-access-argocd-ui)
-   - [Exercise 5: Create Helm Charts and Kustomize Overlays](#exercise-5-create-helm-charts-and-kustomize-overlays)
-   - [Exercise 6: Deploy ArgoCD Applications](#exercise-6-deploy-argocd-applications)
-   - [Exercise 7: Sync ArgoCD Applications](#exercise-7-sync-argocd-applications)
-   - [Exercise 8: Validate the Generated Charts and Manifests](#exercise-8-validate-the-generated-charts-and-manifests)
-5. [Troubleshooting](#troubleshooting)
-6. [Conclusion](#conclusion)
+- [GitOps Lab: Managing Deployments with ArgoCD on OpenShift](#gitops-lab-managing-deployments-with-argocd-on-openshift)
+  - [Table of Contents](#table-of-contents)
+  - [Lab Overview](#lab-overview)
+  - [Prerequisites](#prerequisites)
+  - [Lab Setup](#lab-setup)
+    - [Exercise 1: Clone the Repository](#exercise-1-clone-the-repository)
+    - [Exercise 2: Initialize the Environment](#exercise-2-initialize-the-environment)
+    - [Exercise 3: Install ArgoCD in OpenShift](#exercise-3-install-argocd-in-openshift)
+    - [Exercise 4: Access ArgoCD UI](#exercise-4-access-argocd-ui)
+  - [Lab Exercises](#lab-exercises)
+    - [Exercise 5: Create Helm Charts and Kustomize Overlays](#exercise-5-create-helm-charts-and-kustomize-overlays)
+    - [Exercise 6: Deploy ArgoCD Applications](#exercise-6-deploy-argocd-applications)
+    - [Exercise 7: Sync ArgoCD Applications](#exercise-7-sync-argocd-applications)
+    - [Exercise 8: Validate the Generated Charts and Manifests](#exercise-8-validate-the-generated-charts-and-manifests)
+  - [Troubleshooting](#troubleshooting)
+    - [Common Issues](#common-issues)
+    - [Debugging Tips](#debugging-tips)
+  - [Conclusion](#conclusion)
 
 ## Lab Overview
 
@@ -36,7 +40,7 @@ Before you begin, ensure you have the following tools installed:
 
 - [Helm](https://helm.sh/docs/intro/install/)
 - [Kustomize](https://kustomize.io/)
-- [OpenShift CLI (oc)](https://docs.openshift.com/container-platform/4.8/cli_reference/openshift_cli/getting-started-cli.html)
+- [OpenShift CLI (oc)](https://docs.openshift.com/container-platform/4.16/cli_reference/openshift_cli/getting-started-cli.html)
 - [ArgoCD CLI](https://argoproj.github.io/argo-cd/cli_installation/)
 
 ## Lab Setup
