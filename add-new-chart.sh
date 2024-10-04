@@ -121,7 +121,8 @@ create_argocd_application() {
     local namespace="default"  # Modify this if you use a different namespace
 
     echo "Creating ArgoCD application manifest for $service in $env environment"
-    cat <<EOF > result/$env/$service-argocd-app.yaml
+    mkdir -p result/apps/$env
+    cat <<EOF > result/apps/$env/$service-argocd-app.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
