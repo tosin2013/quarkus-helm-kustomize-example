@@ -9,8 +9,12 @@ environments=("dev" "prod" "qa")
 # Step 1: Create Helm charts for each microservice in base directory
 for service in "${microservices[@]}"; do
     echo "Creating Helm chart for $service"
-    mkdir -p kustomize/base/$service/helm
-    helm create kustomize/base/$service/helm
+    if [ ! -d "kustomize/base/$service/helm" ]; then
+        mkdir -p kustomize/base/$service/helm
+        helm create kustomize/base/$service/helm
+    else
+        echo "Directory kustomize/base/$service/helm already exists. Skipping helm create."
+    fi
 
     # Update values.yaml to include the name field
     cat <<EOF > kustomize/base/$service/helm/values.yaml
