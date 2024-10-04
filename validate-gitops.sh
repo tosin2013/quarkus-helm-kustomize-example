@@ -7,8 +7,14 @@ BASE_DIR="result"
 validate_chart() {
   local chart_dir=$1
   echo "Validating chart in directory: $chart_dir"
-  # Add your validation commands here
-  # Example: kubeval $chart_dir/*.yaml
+  # Validate Helm chart
+  helm lint $chart_dir/helm
+  helm template $chart_dir/helm > /tmp/rendered-chart.yaml
+  kubeval /tmp/rendered-chart.yaml
+
+  # Validate Kustomize manifest
+  kustomize build $chart_dir > /tmp/rendered-kustomize.yaml
+  kubeval /tmp/rendered-kustomize.yaml
 }
 
 # Iterate over all directories in the base directory
