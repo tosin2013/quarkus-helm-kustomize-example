@@ -32,6 +32,9 @@ create_helm_charts() {
 name: $service
 replicas: 1
 image: nginx:1.16.0
+service:
+  type: ClusterIP
+  port: 80
 EOF
     done
 }
@@ -63,6 +66,25 @@ spec:
         ports:
         - containerPort: 80
 EOF
+
+        # Add the service definition
+        cat <<EOF > kustomize/base/$service/helm/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "testme.fullname" . }}
+  labels:
+    {{- include "testme.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "testme.selectorLabels" . | nindent 4 }}
+EOF
     done
 }
 
@@ -71,6 +93,7 @@ generate_helm_output() {
     for service in "${microservices[@]}"; do
         echo "Generating Helm output for $service"
         helm template $service kustomize/base/$service/helm > kustomize/base/$service/backend.yaml
+        helm template $service kustomize/base/$service/helm > kustomize/base/$service/service.yaml
     done
 }
 
@@ -81,6 +104,7 @@ add_service_configuration() {
         cat <<EOF > kustomize/base/$service/kustomization.yaml
 resources:
   - backend.yaml
+  - service.yaml
 EOF
     done
 }
@@ -103,6 +127,7 @@ resources:
   - namespace.yaml
 patchesStrategicMerge:
   - patch-deployment.yaml
+  - patch-service.yaml
 EOF
 
             # Generate deployment patch
@@ -113,6 +138,16 @@ metadata:
   name: $service
 spec:
   replicas: 2
+EOF
+
+            # Generate service patch
+            cat <<EOF > kustomize/overlays/$env/$service/patch-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: $service
+spec:
+  type: LoadBalancer
 EOF
 
             # Add route.yaml
