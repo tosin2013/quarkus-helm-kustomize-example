@@ -140,7 +140,7 @@ resources:
   - ../../../base/$service
   - route.yaml
   - namespace.yaml
-patchesStrategicMerge:
+patches:
   - patch-deployment.yaml
   - patch-service.yaml
 EOF

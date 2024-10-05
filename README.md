@@ -63,22 +63,15 @@ Before you begin, ensure you have the following tools installed:
 
 ### Exercise 3: Validate ArgoCD is installed
 
-1. Create a namespace for ArgoCD:
-   ```bash
-   oc create namespace argocd
-   ```
-2. Install ArgoCD:
-   ```bash
-   oc apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-   ```
+![20241005134919](https://i.imgur.com/shtYyMy.png)
+
+
 
 ### Exercise 4: Access ArgoCD UI
-
-1. Get the route to the ArgoCD UI:
-   ```bash
-   oc get routes -n argocd
-   ```
-2. Note the route URL and access the ArgoCD UI using your browser.
+![20241005134945](https://i.imgur.com/NpXrqra.png)
+![20241005135033](https://i.imgur.com/bM3vct4.png)
+![20241005135116](https://i.imgur.com/g8ewVcl.jpeg)
+![20241005135158](https://i.imgur.com/FgVjpf1.png)
 
 ## Lab Exercises
 
@@ -96,14 +89,24 @@ Before you begin, ensure you have the following tools installed:
 
 ### Exercise 6: Deploy ArgoCD Applications
 
-1. Deploy the ArgoCD applications:
-   ```bash
-   for env in dev prod qa; do
-       for service in microservice1 microservice2; do
-           argocd app create $service-$env --repo https://github.com/your-repo/your-repo.git --path kustomize/overlays/$env/$service --dest-server https://kubernetes.default.svc --dest-namespace default
-       done
-   done
-   ```
+1. Test the application 
+```bash
+kustomize build kustomize/overlays/dev/microservice1
+kustomize build kustomize/overlays/dev/microservice2
+kustomize build kustomize/overlays/qa/microservice1
+kustomize build kustomize/overlays/qa/microservice2
+kustomize build kustomize/overlays/prod/microservice1
+kustomize build kustomize/overlays/prod/microservice2
+```
+2. Deploy the ArgoCD applications:
+```bash
+kustomize build kustomize/overlays/dev/microservice1 | oc apply -f -
+kustomize build kustomize/overlays/dev/microservice2 | oc apply -f -
+kustomize build kustomize/overlays/qa/microservice1 | oc apply -f -
+kustomize build kustomize/overlays/qa/microservice2 | oc apply -f -
+kustomize build kustomize/overlays/prod/microservice1 | oc apply -f -
+kustomize build kustomize/overlays/prod/microservice2 | oc apply -f -
+```
 
 ### Exercise 7: Sync ArgoCD Applications
 
