@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Prompt for the OpenShift entry point
+read -p "Enter the OpenShift entry point (e.g., apps.ocp4.example.com): " ocp_entry_point
+
 # Array of microservices
 microservices=("microservice1" "microservice2")
 
@@ -7,7 +10,7 @@ microservices=("microservice1" "microservice2")
 environments=("dev" "prod" "qa")
 
 # Array of routes for each environment
-routes=("dev.example.com" "prod.example.com" "qa.example.com")
+routes=("dev.$ocp_entry_point" "prod.$ocp_entry_point" "qa.$ocp_entry_point")
 
 # Array of namespaces for each environment
 namespaces=("dev-namespace" "prod-namespace" "qa-namespace")
