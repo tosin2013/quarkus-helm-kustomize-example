@@ -244,3 +244,85 @@ else
 }
 
 main "$@"
+
+# Step 6: Build Kustomize manifests for each environment and microservice
+build_kustomize_manifests() {
+    for env in "${environments[@]}"; do
+        for service in "${microservices[@]}"; do
+            echo "Building Kustomize manifests for $service in $env environment"
+            mkdir -p result/$env
+            kustomize build kustomize/overlays/$env/$service > result/$env/$service.yaml
+
+            # Check if the build was successful
+            if [[ $? -eq 0 ]]; then
+                echo "$env/$service build succeeded!"
+            else
+                echo "$env/$service build failed."
+            fi
+        done
+    done
+}
+
+# Create ArgoCD application manifests
+create_argocd_application_manifests() {
+    for env in "${environments[@]}"; do
+        for service in "${microservices[@]}"; do
+            echo "Creating ArgoCD application manifest for $service in $env environment"
+            mkdir -p result/apps/$env
+            cat <<EOF > result/apps/$env/$service-argocd-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: $service-$env
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-repo/your-repo.git  # Replace with your repo URL
+    targetRevision: HEAD
+    path: kustomize/overlays/$env/$service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: overlay-namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+EOF
+        done
+    done
+}
+
+main() {
+    create_helm_charts
+    clean_helm_charts
+    generate_helm_output
+    add_service_configuration
+    create_overlay_layers
+    build_kustomize_manifests
+    create_argocd_application_manifests
+}
+
+if [ $# -eq 0 ]; then
+echo "No environment specified. Please provide one (dev, prod, or qa)."
+else
+  while [ $# -gt 0 ]; do
+    env_name=$1
+    $#=$(($1 - 1))
+
+    if [ -z "$env_name" ]; then
+      echo "No environment specified. Please provide one (dev, prod, or qa)."
+      break
+    fi
+
+    if [[ ! " ${environments[@]} " =~ " $env_name " ]]; then
+      echo "Invalid environment. Please provide one of (dev, prod, or qa)."
+      break
+    fi
+
+    main "$env_name"
+    break
+  done
+}
+
+main "$@"
