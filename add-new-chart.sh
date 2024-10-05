@@ -36,6 +36,21 @@ service:
   type: ClusterIP
   port: 80
 EOF
+
+        # Add _helpers.tpl
+        cat <<EOF > kustomize/base/$service/helm/templates/_helpers.tpl
+{{- define "testme.fullname" -}}
+{{- .Values.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "testme.labels" -}}
+app: {{ .Values.name }}
+{{- end -}}
+
+{{- define "testme.selectorLabels" -}}
+app: {{ .Values.name }}
+{{- end -}}
+EOF
     done
 }
 
@@ -136,6 +151,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: $service
+  namespace: $namespace
 spec:
   replicas: 2
 EOF
@@ -146,6 +162,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: $service
+  namespace: $namespace
 spec:
   type: LoadBalancer
 EOF
