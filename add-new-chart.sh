@@ -6,6 +6,12 @@ microservices=("microservice1" "microservice2")
 # Array of environments
 environments=("dev" "prod" "qa")
 
+# Array of routes for each environment
+routes=("dev.example.com" "prod.example.com" "qa.example.com")
+
+# Array of namespaces for each environment
+namespaces=("dev-namespace" "prod-namespace" "qa-namespace")
+
 # Step 1: Create Helm charts for each microservice in base directory
 for service in "${microservices[@]}"; do
     echo "Creating Helm chart for $service"
@@ -95,6 +101,34 @@ spec:
       - name: $service
         image: nginx:1.16.0
 EOF
+
+        # Add route and namespace patches
+        cat <<EOF > kustomize/overlays/$env/$service/route.yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: $service-$env
+spec:
+  to:
+    kind: Service
+    name: $service-$env
+  host: $route
+  port:
+    targetPort: 80
+EOF
+
+        cat <<EOF > kustomize/overlays/$env/$service/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: $namespace
+EOF
+
+        # Update kustomization.yaml to include route and namespace
+        cat <<EOF >> kustomize/overlays/$env/$service/kustomization.yaml
+  - route.yaml
+  - namespace.yaml
+EOF
     done
 done
 
@@ -118,7 +152,7 @@ done
 create_argocd_application() {
     local env=$1
     local service=$2
-    local namespace="default"  # Modify this if you use a different namespace
+    local namespace=${namespaces[$i]}  # Use the correct namespace for each environment
 
     echo "Creating ArgoCD application manifest for $service in $env environment"
     mkdir -p result/apps/$env
@@ -159,7 +193,7 @@ for env in "${environments[@]}"; do
         fi
 
         # Create ArgoCD application manifest
-        create_argocd_application $env $service
+        create_argocd_application $env $service ${namespaces[$i]}
     done
 done
 
