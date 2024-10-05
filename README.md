@@ -11,7 +11,7 @@ Welcome to the GitOps lab! In this lab, you will learn how to manage Helm charts
   - [Lab Setup](#lab-setup)
     - [Exercise 1: Clone the Repository](#exercise-1-clone-the-repository)
     - [Exercise 2: Initialize the Environment](#exercise-2-initialize-the-environment)
-    - [Exercise 3: Install ArgoCD in OpenShift](#exercise-3-install-argocd-in-openshift)
+    - [Exercise 3: Validate ArgoCD is installed](#exercise-3-validate-argocd-is-installed)
     - [Exercise 4: Access ArgoCD UI](#exercise-4-access-argocd-ui)
   - [Lab Exercises](#lab-exercises)
     - [Exercise 5: Create Helm Charts and Kustomize Overlays](#exercise-5-create-helm-charts-and-kustomize-overlays)
@@ -50,18 +50,18 @@ Before you begin, ensure you have the following tools installed:
 1. Open a terminal.
 2. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo/your-repo.git
-   cd your-repo
+   git clone https://github.com/tosin2013/quarkus-helm-kustomize-example.git
+   cd quarkus-helm-kustomize-example
    ```
 
 ### Exercise 2: Initialize the Environment
 
 1. Run the initialization script:
    ```bash
-   ./init.sh
+   ./scripts/deploy.sh
    ```
 
-### Exercise 3: Install ArgoCD in OpenShift
+### Exercise 3: Validate ArgoCD is installed
 
 1. Create a namespace for ArgoCD:
    ```bash
