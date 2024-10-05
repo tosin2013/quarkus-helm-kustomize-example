@@ -143,9 +143,15 @@ resources:
   - ../../../base/$service
   - route.yaml
   - namespace.yaml
-patchesStrategicMerge:
-  - patch-deployment.yaml
-  - patch-service.yaml
+patches:
+  - path: patch-deployment.yaml
+    target:
+      kind: Deployment
+      name: {{ include "testme.fullname" . }}
+  - path: patch-service.yaml
+    target:
+      kind: Service
+      name: {{ include "testme.fullname" . }}
 EOF
 
             # Generate deployment patch
