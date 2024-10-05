@@ -173,6 +173,7 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: $service
+  namespace: $namespace
 spec:
   to:
     kind: Service
