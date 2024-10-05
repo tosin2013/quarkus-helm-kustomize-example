@@ -38,6 +38,7 @@ service:
 EOF
 
         # Add _helpers.tpl
+        mkdir -p kustomize/base/$service/helm/templates
         cat <<EOF > kustomize/base/$service/helm/templates/_helpers.tpl
 {{- define "testme.fullname" -}}
 {{- .Values.name | trunc 63 | trimSuffix "-" -}}
@@ -64,16 +65,18 @@ clean_helm_charts() {
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.name }}
+  name: {{ include "testme.fullname" . }}
+  labels:
+    {{- include "testme.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
-      app: {{ .Values.name }}
+      {{- include "testme.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ .Values.name }}
+        {{- include "testme.labels" . | nindent 8 }}
     spec:
       containers:
       - name: {{ .Values.name }}
@@ -140,7 +143,7 @@ resources:
   - ../../../base/$service
   - route.yaml
   - namespace.yaml
-patches:
+patchesStrategicMerge:
   - patch-deployment.yaml
   - patch-service.yaml
 EOF
@@ -150,7 +153,7 @@ EOF
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: $service
+  name: {{ include "testme.fullname" . }}
   namespace: $namespace
 spec:
   replicas: 2
@@ -161,7 +164,7 @@ EOF
 apiVersion: v1
 kind: Service
 metadata:
-  name: $service
+  name: {{ include "testme.fullname" . }}
   namespace: $namespace
 spec:
   type: LoadBalancer
