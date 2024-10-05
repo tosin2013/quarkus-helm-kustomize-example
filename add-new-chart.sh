@@ -74,6 +74,7 @@ generate_helm_output() {
 add_service_configuration() {
     for service in "${microservices[@]}"; do
         echo "Adding service configuration to kustomization.yaml for $service"
+        mkdir -p kustomize/base/$service
         cat <<EOF > kustomize/base/$service/kustomization.yaml
 resources:
   - deployment.yaml
@@ -155,6 +156,11 @@ EOF
 }
 
 # Step 5: Add Service configuration
+# Ensure base directories exist
+for service in "${microservices[@]}"; do
+    mkdir -p kustomize/base/$service
+done
+
 add_service_configuration
 
 # Step 6: Build Kustomize manifests for each environment and microservice
