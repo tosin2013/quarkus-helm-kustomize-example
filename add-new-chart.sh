@@ -24,8 +24,20 @@ create_helm_charts() {
     for service in "${microservices[@]}"; do
         echo "Creating Helm chart for $service"
         if [ ! -d "kustomize/base/$service/helm" ]; then
-            mkdir -p kustomize/base/$service/helm
-            helm create kustomize/base/$service/helm
+            mkdir -p kustomize/base/$service/helm/templates
+            cat <<EOF > kustomize/base/$service/helm/templates/_helpers.tpl
+            {{- define "testme.fullname" -}}
+            {{- .Values.name | trunc 63 | trimSuffix "-" -}}
+            {{- end -}}
+
+            {{- define "testme.labels" -}}
+            app: {{ .Values.name }}
+            {{- end -}}
+
+            {{- define "testme.selectorLabels" -}}
+            app: {{ .Values.name }}
+            {{- end -}}
+            EOF
         else
             echo "Directory kustomize/base/$service/helm already exists. Skipping helm create."
         fi
@@ -63,6 +75,47 @@ clean_helm_charts() {
     for service in "${microservices[@]}"; do
         echo "Cleaning up Helm templates for $service"
         rm -rf kustomize/base/$service/helm/templates/*
+        cat <<EOF > kustomize/base/$service/helm/templates/deployment.yaml
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: {{ include "testme.fullname" . }}
+          labels:
+            {{- include "testme.labels" . | nindent 4 }}
+        spec:
+          replicas: {{ .Values.replicas }}
+          selector:
+            matchLabels:
+              {{- include "testme.selectorLabels" . | nindent 6 }}
+          template:
+            metadata:
+              labels:
+                {{- include "testme.labels" . | nindent 8 }}
+            spec:
+              containers:
+              - name: {{ .Values.name }}
+                image: {{ .Values.image }}
+                ports:
+                - containerPort: 80
+        EOF
+
+        cat <<EOF > kustomize/base/$service/helm/templates/service.yaml
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: {{ include "testme.fullname" . }}
+          labels:
+            {{- include "testme.labels" . | nindent 4 }}
+        spec:
+          type: {{ .Values.service.type }}
+          ports:
+            - port: {{ .Values.service.port }}
+              targetPort: http
+              protocol: TCP
+              name: http
+          selector:
+            {{- include "testme.selectorLabels" . | nindent 4 }}
+        EOF
         # Generate new basic templates
         cat <<EOF > kustomize/base/$service/helm/templates/deployment.yaml
 apiVersion: apps/v1
