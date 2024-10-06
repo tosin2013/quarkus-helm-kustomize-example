@@ -150,8 +150,10 @@ git push origin main
 
 2. Sync the Changes in argocd
 ![20241006110540](https://i.imgur.com/MNkvldQ.png)
-3. Delete the pods to see the changes
+3. Delete the pods to see the changes if you did a `PRUNE` in the argocd sync tou do not need to delete the pods
 4. Validate the changes in the application
+
+![20241006111012](https://i.imgur.com/DHlWInp.png)
 
 ### Testing the application manifests
 
