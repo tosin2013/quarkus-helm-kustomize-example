@@ -48,7 +48,7 @@ EOF
         cat <<EOF > "kustomize/base/$service/helm/values.yaml"
 name: $service
 replicas: 1
-image: nginx:1.16.0
+image: nginx:1.27.2
 service:
   type: ClusterIP
   port: 80
