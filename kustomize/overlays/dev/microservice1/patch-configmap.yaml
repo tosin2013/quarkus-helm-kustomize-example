@@ -10,6 +10,6 @@ data:
       <title>Custom my change to page</title>
     </head>
     <body>
-      <h1>Welcome to My Samuels  Nginx Page!</h1>
+      <h1>Welcome to Samuels  Nginx Page!</h1>
     </body>
     </html>
