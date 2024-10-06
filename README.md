@@ -18,6 +18,7 @@ Welcome to the GitOps lab! In this lab, you will learn how to manage Helm charts
     - [Exercise 6: Deploy ArgoCD Applications](#exercise-6-deploy-argocd-applications)
     - [Exercise 7: Deploy via ArgoCD application](#exercise-7-deploy-via-argocd-application)
     - [Exercise 8: Validate the Generated Charts and Manifests](#exercise-8-validate-the-generated-charts-and-manifests)
+    - [Testing the application manifests](#testing-the-application-manifests)
   - [Troubleshooting](#troubleshooting)
     - [Common Issues](#common-issues)
     - [Debugging Tips](#debugging-tips)
@@ -115,11 +116,31 @@ kustomize build kustomize/overlays/prod/microservice2 | oc apply -f -
 ```bash
 git add kustomize/   
 git commit -m "Add new files"
+git push origin main
+```
+2. apply changes to argocd
+**For Dev Env**
+```bash
+oc apply -f result/apps/dev/microservice1-argocd-app.yaml
+oc apply -f result/apps/dev/microservice2-argocd-app.yaml
+```
+**For QA Env**
+```bash
+oc apply -f result/apps/qa/microservice1-argocd-app.yaml
+oc apply -f result/apps/qa/microservice2-argocd-app.yaml
 ```
 
+**For PROD Env**
+```bash
+oc apply -f result/apps/prod/microservice1-argocd-app.yaml
+oc apply -f result/apps/prod/microservice2-argocd-app.yaml
+```
 
+![20241006101321](https://i.imgur.com/DR7igkN.png)
 
 ### Exercise 8: Validate the Generated Charts and Manifests
+
+### Testing the application manifests
 
 1. Validate the generated charts and manifests:
    ```bash
