@@ -1,0 +1,17 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: microservice2
+  namespace: dev-namespace
+spec:
+  to:
+    kind: Service
+    name: microservice2
+    weight: 100
+  host: microservice2-dev.dev.apps.developerhub.sandbox1804.opentlc.com
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: None
+  wildcardPolicy: None
