@@ -1,30 +1,289 @@
 #!/bin/bash
+export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+set -x
+set -euo pipefail
 
-# Define resources and patches
-resources=(
-  "../../../base/microservice1"
-  "route.yaml"
-  "namespace.yaml"
-)
+# Prompt for the OpenShift entry point
+read -rp "Enter the OpenShift entry point (e.g., apps.ocp4.example.com): " ocp_entry_point
 
-patches=(
-  "path: patch-deployment.yaml"
-  "target:
-    kind: Deployment
-    name: microservice1"
-  "path: patch-service.yaml"
-  "target:
+# Prompt for the Git repository URL
+read -rp "Enter the Git repository URL for ArgoCD applications: " git_repo_url
+
+# Array of microservices
+microservices=("microservice1" "microservice2")
+
+# Array of environments
+environments=("dev" "prod" "qa")
+
+# Arrays of routes and namespaces for each environment
+routes=("dev.$ocp_entry_point" "prod.$ocp_entry_point" "qa.$ocp_entry_point")
+namespaces=("dev-namespace" "prod-namespace" "qa-namespace")
+
+# Step 1: Create Helm charts for each microservice in base directory
+create_helm_charts() {
+    for service in "${microservices[@]}"; do
+        echo "Creating Helm chart for $service"
+        if [ ! -d "kustomize/base/$service/helm" ]; then
+            mkdir -p "kustomize/base/$service/helm/templates"
+            cat <<EOF > "kustomize/base/$service/helm/templates/_helpers.tpl"
+{{- define "testme.fullname" -}}
+{{- .Values.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "testme.labels" -}}
+app: {{ .Values.name }}
+{{- end -}}
+
+{{- define "testme.selectorLabels" -}}
+app: {{ .Values.name }}
+{{- end -}}
+EOF
+        else
+            echo "Directory kustomize/base/$service/helm already exists. Skipping helm create."
+        fi
+
+        # Update values.yaml to include the name field
+        cat <<EOF > "kustomize/base/$service/helm/values.yaml"
+name: $service
+replicas: 1
+image: nginx:1.16.0
+service:
+  type: ClusterIP
+  port: 80
+EOF
+
+        # Add Chart.yaml
+        cat <<EOF > "kustomize/base/$service/helm/Chart.yaml"
+apiVersion: v2
+name: $service
+description: A Helm chart for Kubernetes
+version: 0.1.0
+appVersion: "1.0"
+EOF
+
+        # Add _helpers.tpl
+        mkdir -p "kustomize/base/$service/helm/templates"
+        cat <<EOF > "kustomize/base/$service/helm/templates/_helpers.tpl"
+{{- define "testme.fullname" -}}
+{{- .Values.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "testme.labels" -}}
+app: {{ .Values.name }}
+{{- end -}}
+
+{{- define "testme.selectorLabels" -}}
+app: {{ .Values.name }}
+{{- end -}}
+EOF
+    done
+}
+
+# Step 2: Clean up Helm charts by keeping only necessary templates (deployment)
+clean_helm_charts() {
+    for service in "${microservices[@]}"; do
+        echo "Cleaning up Helm templates for $service"
+        rm -rf "kustomize/base/$service/helm/templates/*"
+        cat <<EOF > "kustomize/base/$service/helm/templates/deployment.yaml"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "testme.fullname" . }}
+  labels:
+    {{- include "testme.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "testme.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "testme.labels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: {{ .Values.name }}
+        image: {{ .Values.image }}
+        ports:
+        - containerPort: 80
+EOF
+
+        cat <<EOF > "kustomize/base/$service/helm/templates/service.yaml"
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "testme.fullname" . }}
+  labels:
+    {{- include "testme.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "testme.selectorLabels" . | nindent 4 }}
+EOF
+    done
+}
+
+# Step 3: Generate Helm output using helm template for each microservice into base directory
+generate_helm_output() {
+    for service in "${microservices[@]}"; do
+        echo "Generating Helm output for $service"
+        helm template "$service" "kustomize/base/$service/helm" > "kustomize/base/$service/backend.yaml"
+        helm template "$service" "kustomize/base/$service/helm" > "kustomize/base/$service/service.yaml"
+    done
+}
+
+# Step 4: Add service configuration to kustomization.yaml for each microservice
+add_service_configuration() {
+    for service in "${microservices[@]}"; do
+        echo "Creating base kustomization.yaml for $service"
+        cat <<EOF > "kustomize/base/$service/kustomization.yaml"
+resources:
+  - backend.yaml
+  - service.yaml
+EOF
+    done
+}
+
+# Step 5: Create overlay layers
+create_overlay_layers() {
+    for idx in "${!environments[@]}"; do
+        env=${environments[$idx]}
+        namespace=${namespaces[$idx]}
+        for service in "${microservices[@]}"; do
+            echo "Setting up $env overlay for $service"
+            mkdir -p "kustomize/overlays/$env/$service"
+
+            # Create kustomization.yaml
+            cat <<EOF > "kustomize/overlays/$env/$service/kustomization.yaml"
+resources:
+  - ../../../base/$service
+  - route.yaml
+  - namespace.yaml
+patches:
+  - path: patch-deployment.yaml
+    target:
+      kind: Deployment
+      name: {{ include "testme.fullname" . }}
+  - path: patch-service.yaml
+    target:
+      kind: Service
+      name: {{ include "testme.fullname" . }}
+EOF
+
+            # Generate deployment patch
+            cat <<EOF > "kustomize/overlays/$env/$service/patch-deployment.yaml"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "testme.fullname" . }}
+  namespace: $namespace
+spec:
+  replicas: 2
+EOF
+
+            # Generate service patch
+            cat <<EOF > "kustomize/overlays/$env/$service/patch-service.yaml"
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "testme.fullname" . }}
+  namespace: $namespace
+spec:
+  type: LoadBalancer
+EOF
+
+            # Add route.yaml
+            cat <<EOF > "kustomize/overlays/$env/$service/route.yaml"
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: $service
+  namespace: $namespace
+spec:
+  to:
     kind: Service
-    name: microservice1"
-)
+    name: $service
+  host: $service-$env.$ocp_entry_point
+  port:
+    targetPort: 80
+EOF
 
-# Example usage of resources and patches
-echo "Resources:"
-for resource in "${resources[@]}"; do
-  echo "  - $resource"
-done
+            # Add namespace.yaml
+            cat <<EOF > "kustomize/overlays/$env/$service/namespace.yaml"
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: $namespace
+EOF
 
-echo "Patches:"
-for patch in "${patches[@]}"; do
-  echo "  - $patch"
-done
+        done
+    done
+}
+
+# Step 6: Build Kustomize manifests for each environment and microservice
+build_kustomize_manifests() {
+    for idx in "${!environments[@]}"; do
+        env=${environments[$idx]}
+        for service in "${microservices[@]}"; do
+            echo "Building Kustomize manifests for $service in $env environment"
+            mkdir -p "result/$env"
+            kustomize build "kustomize/overlays/$env/$service" > "result/$env/$service.yaml"
+
+            # Check if the build was successful
+            if kustomize build "kustomize/overlays/$env/$service"; then
+                echo "$env/$service build succeeded!"
+            else
+                echo "$env/$service build failed."
+            fi
+        done
+    done
+}
+
+# Step 7: Create ArgoCD application manifests
+create_argocd_application_manifests() {
+    for idx in "${!environments[@]}"; do
+        env=${environments[$idx]}
+        namespace=${namespaces[$idx]}
+        for service in "${microservices[@]}"; do
+            echo "Creating ArgoCD application manifest for $service in $env environment"
+            mkdir -p "result/apps/$env"
+            cat <<EOF > "result/apps/$env/$service-argocd-app.yaml"
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: $service-$env
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: $git_repo_url
+    targetRevision: HEAD
+    path: kustomize/overlays/$env/$service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: $namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+EOF
+        done
+    done
+}
+
+main() {
+    create_helm_charts
+    clean_helm_charts
+    generate_helm_output
+    add_service_configuration
+    create_overlay_layers
+    build_kustomize_manifests
+    create_argocd_application_manifests
+}
+
+main
