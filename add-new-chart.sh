@@ -3,6 +3,9 @@ export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 set -x
 set -euo pipefail
 
+
+rm -rf kustomize result
+
 # Prompt for the OpenShift entry point
 read -rp "Enter the OpenShift entry point (e.g., apps.ocp4.example.com): " ocp_entry_point
 
