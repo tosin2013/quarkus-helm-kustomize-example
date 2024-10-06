@@ -1,0 +1,6 @@
+name: microservice1
+replicas: 1
+image: nginx:1.16.0
+service:
+  type: ClusterIP
+  port: 80

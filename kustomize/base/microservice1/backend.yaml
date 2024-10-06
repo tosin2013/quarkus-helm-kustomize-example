@@ -1,0 +1,40 @@
+---
+# Source: microservice1/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: microservice1
+  labels:
+    app: microservice1
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: microservice1
+---
+# Source: microservice1/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice1
+  labels:
+    app: microservice1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microservice1
+  template:
+    metadata:
+      labels:
+        app: microservice1
+    spec:
+      containers:
+      - name: microservice1
+        image: nginx:1.16.0
+        ports:
+        - containerPort: 80

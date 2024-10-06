@@ -1,0 +1,12 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: microservice1
+  namespace: qa-namespace
+spec:
+  to:
+    kind: Service
+    name: microservice1
+  host: microservice1-qa.qa.apps.ocp4.example.com
+  port:
+    targetPort: 80

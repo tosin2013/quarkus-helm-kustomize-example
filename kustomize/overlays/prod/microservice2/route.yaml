@@ -1,0 +1,12 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: microservice2
+  namespace: prod-namespace
+spec:
+  to:
+    kind: Service
+    name: microservice2
+  host: microservice2-prod.prod.apps.ocp4.example.com
+  port:
+    targetPort: 80

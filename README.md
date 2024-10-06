@@ -65,8 +65,6 @@ Before you begin, ensure you have the following tools installed:
 
 ![20241005134919](https://i.imgur.com/shtYyMy.png)
 
-
-
 ### Exercise 4: Access ArgoCD UI
 ![20241005134945](https://i.imgur.com/NpXrqra.png)
 ![20241005135033](https://i.imgur.com/bM3vct4.png)
@@ -88,6 +86,8 @@ Before you begin, ensure you have the following tools installed:
    - Create ArgoCD application manifests in the `result/apps` directory.
 
 ### Exercise 6: Deploy ArgoCD Applications
+
+[Repo Directory Logic](repo-directory-logic.md)
 
 1. Test the application 
 ```bash

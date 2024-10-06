@@ -4,6 +4,75 @@ This document explains the purpose and logic behind the directory structure of t
 
 ## Directory Structure
 
+```
+tree kustomize                                                                                       08:40:33 AM
+kustomize
+├── base
+│   ├── microservice1
+│   │   ├── backend.yaml
+│   │   ├── helm
+│   │   │   ├── Chart.yaml
+│   │   │   ├── templates
+│   │   │   │   ├── _helpers.tpl
+│   │   │   │   ├── deployment.yaml
+│   │   │   │   └── service.yaml
+│   │   │   └── values.yaml
+│   │   └── kustomization.yaml
+│   └── microservice2
+│       ├── backend.yaml
+│       ├── helm
+│       │   ├── Chart.yaml
+│       │   ├── templates
+│       │   │   ├── _helpers.tpl
+│       │   │   ├── deployment.yaml
+│       │   │   └── service.yaml
+│       │   └── values.yaml
+│       └── kustomization.yaml
+└── overlays
+    ├── dev
+    │   ├── microservice1
+    │   │   ├── kustomization.yaml
+    │   │   ├── namespace.yaml
+    │   │   ├── patch-deployment.yaml
+    │   │   ├── patch-service.yaml
+    │   │   └── route.yaml
+    │   └── microservice2
+    │       ├── kustomization.yaml
+    │       ├── namespace.yaml
+    │       ├── patch-deployment.yaml
+    │       ├── patch-service.yaml
+    │       └── route.yaml
+    ├── prod
+    │   ├── microservice1
+    │   │   ├── kustomization.yaml
+    │   │   ├── namespace.yaml
+    │   │   ├── patch-deployment.yaml
+    │   │   ├── patch-service.yaml
+    │   │   └── route.yaml
+    │   └── microservice2
+    │       ├── kustomization.yaml
+    │       ├── namespace.yaml
+    │       ├── patch-deployment.yaml
+    │       ├── patch-service.yaml
+    │       └── route.yaml
+    └── qa
+        ├── microservice1
+        │   ├── kustomization.yaml
+        │   ├── namespace.yaml
+        │   ├── patch-deployment.yaml
+        │   ├── patch-service.yaml
+        │   └── route.yaml
+        └── microservice2
+            ├── kustomization.yaml
+            ├── namespace.yaml
+            ├── patch-deployment.yaml
+            ├── patch-service.yaml
+            └── route.yaml
+
+18 directories, 44 files
+```
+
+
 ### kustomize
 
 The `kustomize` directory is the root for all Kustomize-related configurations. It is divided into two main subdirectories: `base` and `overlays`.
