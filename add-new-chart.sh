@@ -103,6 +103,7 @@ spec:
       labels:
         {{- include "testme.labels" . | nindent 8 }}
     spec:
+      serviceAccountName: $service-sa
       containers:
       - name: {{ .Values.name }}
         image: {{ .Values.image }}
@@ -166,6 +167,7 @@ resources:
   - ../../../base/$service
   - route.yaml
   - namespace.yaml
+  - service-account.yaml
 patches:
   - path: patch-deployment.yaml
     target:
@@ -221,6 +223,15 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: $namespace
+EOF
+
+            # Add service-account.yaml
+            cat <<EOF > "kustomize/overlays/$env/$service/service-account.yaml"
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: $service-sa
+  namespace: $namespace
 EOF
 
         done
