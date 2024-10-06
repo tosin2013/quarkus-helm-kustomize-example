@@ -154,6 +154,7 @@ create_overlay_layers() {
     for idx in "${!environments[@]}"; do
         env=${environments[$idx]}
         namespace=${namespaces[$idx]}
+        route=${routes[$idx]}
         for service in "${microservices[@]}"; do
             echo "Setting up $env overlay for $service"
             mkdir -p "kustomize/overlays/$env/$service"
@@ -208,7 +209,7 @@ spec:
   to:
     kind: Service
     name: $service
-  host: $service-$env.$ocp_entry_point
+  host: $service-$env.$route
   port:
     targetPort: 80
 EOF
