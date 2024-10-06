@@ -44,7 +44,7 @@ EOF
             echo "Directory kustomize/base/$service/helm already exists. Skipping helm create."
         fi
 
-        # Update values.yaml to include the name field
+        # Update values.yaml to include the name field and custom field
         cat <<EOF > "kustomize/base/$service/helm/values.yaml"
 name: $service
 replicas: 1
@@ -52,6 +52,9 @@ image: nginx:1.27.2
 service:
   type: ClusterIP
   port: 80
+custom:
+  title: "Custom Nginx Page"
+  heading: "Welcome to My Custom Nginx Page!"
 EOF
 
         # Add Chart.yaml
