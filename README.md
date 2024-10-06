@@ -16,7 +16,7 @@ Welcome to the GitOps lab! In this lab, you will learn how to manage Helm charts
   - [Lab Exercises](#lab-exercises)
     - [Exercise 5: Create Helm Charts and Kustomize Overlays](#exercise-5-create-helm-charts-and-kustomize-overlays)
     - [Exercise 6: Deploy ArgoCD Applications](#exercise-6-deploy-argocd-applications)
-    - [Exercise 7: Sync ArgoCD Applications](#exercise-7-sync-argocd-applications)
+    - [Exercise 7: Deploy via ArgoCD application](#exercise-7-deploy-via-argocd-application)
     - [Exercise 8: Validate the Generated Charts and Manifests](#exercise-8-validate-the-generated-charts-and-manifests)
   - [Troubleshooting](#troubleshooting)
     - [Common Issues](#common-issues)
@@ -98,7 +98,14 @@ kustomize build kustomize/overlays/qa/microservice2
 kustomize build kustomize/overlays/prod/microservice1
 kustomize build kustomize/overlays/prod/microservice2
 ```
-2. Deploy the ArgoCD applications:
+
+2. Push changes to git 
+```bash
+git add kustomize/   
+git commit -m "Add new charts"
+```
+
+3. Optional: deploy services manually
 ```bash
 kustomize build kustomize/overlays/dev/microservice1 | oc apply -f -
 kustomize build kustomize/overlays/dev/microservice2 | oc apply -f -
@@ -108,7 +115,7 @@ kustomize build kustomize/overlays/prod/microservice1 | oc apply -f -
 kustomize build kustomize/overlays/prod/microservice2 | oc apply -f -
 ```
 
-### Exercise 7: Sync ArgoCD Applications
+### Exercise 7: Deploy via ArgoCD application 
 
 1. Sync the ArgoCD applications:
    ```bash

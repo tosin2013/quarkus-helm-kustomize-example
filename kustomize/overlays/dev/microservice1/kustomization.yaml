@@ -1,3 +1,4 @@
+namespace: dev-namespace
 resources:
   - ../../../base/microservice1
   - route.yaml

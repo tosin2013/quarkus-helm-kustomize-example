@@ -161,6 +161,7 @@ create_overlay_layers() {
 
             # Create kustomization.yaml
             cat <<EOF > "kustomize/overlays/$env/$service/kustomization.yaml"
+namespace: $namespace
 resources:
   - ../../../base/$service
   - route.yaml
