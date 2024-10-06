@@ -4,10 +4,10 @@ set -x
 set -euo pipefail
 
 # Prompt for the OpenShift entry point
-read -p "Enter the OpenShift entry point (e.g., apps.ocp4.example.com): " ocp_entry_point
+read -rp "Enter the OpenShift entry point (e.g., apps.ocp4.example.com): " ocp_entry_point
 
 # Prompt for the Git repository URL
-read -p "Enter the Git repository URL for ArgoCD applications: " git_repo_url
+read -rp "Enter the Git repository URL for ArgoCD applications: " git_repo_url
 
 # Array of microservices
 microservices=("microservice1" "microservice2")
@@ -24,8 +24,8 @@ create_helm_charts() {
     for service in "${microservices[@]}"; do
         echo "Creating Helm chart for $service"
         if [ ! -d "kustomize/base/$service/helm" ]; then
-            mkdir -p kustomize/base/$service/helm/templates
-            cat <<EOF > kustomize/base/$service/helm/templates/_helpers.tpl
+            mkdir -p "kustomize/base/$service/helm/templates"
+            cat <<EOF > "kustomize/base/$service/helm/templates/_helpers.tpl"
 {{- define "testme.fullname" -}}
 {{- .Values.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
@@ -43,7 +43,7 @@ EOF
         fi
 
         # Update values.yaml to include the name field
-        cat <<EOF > kustomize/base/$service/helm/values.yaml
+        cat <<EOF > "kustomize/base/$service/helm/values.yaml"
 name: $service
 replicas: 1
 image: nginx:1.16.0
@@ -53,7 +53,7 @@ service:
 EOF
 
         # Add Chart.yaml
-        cat <<EOF > kustomize/base/$service/helm/Chart.yaml
+        cat <<EOF > "kustomize/base/$service/helm/Chart.yaml"
 apiVersion: v2
 name: $service
 description: A Helm chart for Kubernetes
@@ -62,8 +62,8 @@ appVersion: "1.0"
 EOF
 
         # Add _helpers.tpl
-        mkdir -p kustomize/base/$service/helm/templates
-        cat <<EOF > kustomize/base/$service/helm/templates/_helpers.tpl
+        mkdir -p "kustomize/base/$service/helm/templates"
+        cat <<EOF > "kustomize/base/$service/helm/templates/_helpers.tpl"
 {{- define "testme.fullname" -}}
 {{- .Values.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
@@ -83,8 +83,8 @@ EOF
 clean_helm_charts() {
     for service in "${microservices[@]}"; do
         echo "Cleaning up Helm templates for $service"
-        rm -rf kustomize/base/$service/helm/templates/*
-        cat <<EOF > kustomize/base/$service/helm/templates/deployment.yaml
+        rm -rf "kustomize/base/$service/helm/templates/*"
+        cat <<EOF > "kustomize/base/$service/helm/templates/deployment.yaml"
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -108,7 +108,7 @@ spec:
         - containerPort: 80
 EOF
 
-        cat <<EOF > kustomize/base/$service/helm/templates/service.yaml
+        cat <<EOF > "kustomize/base/$service/helm/templates/service.yaml"
 apiVersion: v1
 kind: Service
 metadata:
@@ -132,8 +132,8 @@ EOF
 generate_helm_output() {
     for service in "${microservices[@]}"; do
         echo "Generating Helm output for $service"
-        helm template $service kustomize/base/$service/helm > kustomize/base/$service/backend.yaml
-        helm template $service kustomize/base/$service/helm > kustomize/base/$service/service.yaml
+        helm template "$service" "kustomize/base/$service/helm" > "kustomize/base/$service/backend.yaml"
+        helm template "$service" "kustomize/base/$service/helm" > "kustomize/base/$service/service.yaml"
     done
 }
 
@@ -141,7 +141,7 @@ generate_helm_output() {
 add_service_configuration() {
     for service in "${microservices[@]}"; do
         echo "Creating base kustomization.yaml for $service"
-        cat <<EOF > kustomize/base/$service/kustomization.yaml
+        cat <<EOF > "kustomize/base/$service/kustomization.yaml"
 resources:
   - backend.yaml
   - service.yaml
@@ -153,14 +153,13 @@ EOF
 create_overlay_layers() {
     for idx in "${!environments[@]}"; do
         env=${environments[$idx]}
-        route=${routes[$idx]}
         namespace=${namespaces[$idx]}
         for service in "${microservices[@]}"; do
             echo "Setting up $env overlay for $service"
-            mkdir -p kustomize/overlays/$env/$service
+            mkdir -p "kustomize/overlays/$env/$service"
 
             # Create kustomization.yaml
-            cat <<EOF > kustomize/overlays/$env/$service/kustomization.yaml
+            cat <<EOF > "kustomize/overlays/$env/$service/kustomization.yaml"
 resources:
   - ../../../base/$service
   - route.yaml
@@ -177,7 +176,7 @@ patches:
 EOF
 
             # Generate deployment patch
-            cat <<EOF > kustomize/overlays/$env/$service/patch-deployment.yaml
+            cat <<EOF > "kustomize/overlays/$env/$service/patch-deployment.yaml"
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -188,7 +187,7 @@ spec:
 EOF
 
             # Generate service patch
-            cat <<EOF > kustomize/overlays/$env/$service/patch-service.yaml
+            cat <<EOF > "kustomize/overlays/$env/$service/patch-service.yaml"
 apiVersion: v1
 kind: Service
 metadata:
@@ -199,7 +198,7 @@ spec:
 EOF
 
             # Add route.yaml
-            cat <<EOF > kustomize/overlays/$env/$service/route.yaml
+            cat <<EOF > "kustomize/overlays/$env/$service/route.yaml"
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
@@ -215,7 +214,7 @@ spec:
 EOF
 
             # Add namespace.yaml
-            cat <<EOF > kustomize/overlays/$env/$service/namespace.yaml
+            cat <<EOF > "kustomize/overlays/$env/$service/namespace.yaml"
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -232,11 +231,11 @@ build_kustomize_manifests() {
         env=${environments[$idx]}
         for service in "${microservices[@]}"; do
             echo "Building Kustomize manifests for $service in $env environment"
-            mkdir -p result/$env
-            kustomize build kustomize/overlays/"$env"/"$service" > result/"$env"/"$service".yaml
+            mkdir -p "result/$env"
+            kustomize build "kustomize/overlays/$env/$service" > "result/$env/$service.yaml"
 
             # Check if the build was successful
-            if kustomize build kustomize/overlays/"$env"/"$service"; then
+            if kustomize build "kustomize/overlays/$env/$service"; then
                 echo "$env/$service build succeeded!"
             else
                 echo "$env/$service build failed."
@@ -252,8 +251,8 @@ create_argocd_application_manifests() {
         namespace=${namespaces[$idx]}
         for service in "${microservices[@]}"; do
             echo "Creating ArgoCD application manifest for $service in $env environment"
-            mkdir -p result/apps/"$env"
-            cat <<EOF > result/apps/"$env"/"$service"-argocd-app.yaml
+            mkdir -p "result/apps/$env"
+            cat <<EOF > "result/apps/$env/$service-argocd-app.yaml"
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
