@@ -1,9 +1,0 @@
-name: microservice1
-replicas: 1
-image: nginx:1.27.2
-service:
-  type: ClusterIP
-  port: 80
-custom:
-  title: "Custom Nginx Page"
-  heading: "Welcome to My Custom Nginx Page!"
