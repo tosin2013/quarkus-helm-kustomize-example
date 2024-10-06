@@ -168,6 +168,7 @@ resources:
   - route.yaml
   - namespace.yaml
   - service-account.yaml
+  - cluster-role.yaml
 patches:
   - path: patch-deployment.yaml
     target:
@@ -232,6 +233,23 @@ kind: ServiceAccount
 metadata:
   name: $service-sa
   namespace: $namespace
+EOF
+
+            # Add cluster-role.yaml
+            cat <<EOF > "kustomize/overlays/$env/$service/cluster-role.yaml"
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: 'system:openshift:scc:anyuid'
+  namespace: $namespace
+subjects:
+  - kind: ServiceAccount
+    name: $service-sa
+    namespace: $namespace
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: 'system:openshift:scc:anyuid'
 EOF
 
         done
