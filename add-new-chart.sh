@@ -169,11 +169,11 @@ patches:
   - path: patch-deployment.yaml
     target:
       kind: Deployment
-      name: {{ include "testme.fullname" . }}
+      name: $service
   - path: patch-service.yaml
     target:
       kind: Service
-      name: {{ include "testme.fullname" . }}
+      name: $service
 EOF
 
             # Generate deployment patch
@@ -181,7 +181,7 @@ EOF
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "testme.fullname" . }}
+  name: $service
   namespace: $namespace
 spec:
   replicas: 2
@@ -192,7 +192,7 @@ EOF
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "testme.fullname" . }}
+  name: $service
   namespace: $namespace
 spec:
   type: LoadBalancer
