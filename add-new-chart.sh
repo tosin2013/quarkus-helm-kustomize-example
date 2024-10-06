@@ -224,10 +224,10 @@ build_kustomize_manifests() {
         for service in "${microservices[@]}"; do
             echo "Building Kustomize manifests for $service in $env environment"
             mkdir -p result/$env
-            kustomize build kustomize/overlays/$env/$service > result/$env/$service.yaml
+            kustomize build kustomize/overlays/"$env"/"$service" > result/"$env"/"$service".yaml
 
             # Check if the build was successful
-            if [[ $? -eq 0 ]]; then
+            if kustomize build kustomize/overlays/"$env"/"$service"; then
                 echo "$env/$service build succeeded!"
             else
                 echo "$env/$service build failed."
@@ -243,8 +243,8 @@ create_argocd_application_manifests() {
         namespace=${namespaces[$idx]}
         for service in "${microservices[@]}"; do
             echo "Creating ArgoCD application manifest for $service in $env environment"
-            mkdir -p result/apps/$env
-            cat <<EOF > result/apps/$env/$service-argocd-app.yaml
+            mkdir -p result/apps/"$env"
+            cat <<EOF > result/apps/"$env"/"$service"-argocd-app.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
