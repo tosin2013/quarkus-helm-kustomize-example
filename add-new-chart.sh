@@ -103,12 +103,19 @@ spec:
       labels:
         {{- include "testme.labels" . | nindent 8 }}
     spec:
-      serviceAccountName: $service-sa
+      serviceAccountName: {{ .Values.name }}-sa
       containers:
       - name: {{ .Values.name }}
         image: {{ .Values.image }}
         ports:
         - containerPort: 80
+        volumeMounts:
+        - name: html-volume
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html-volume
+        configMap:
+          name: {{ .Values.name }}-html
 EOF
 
         cat <<EOF > "kustomize/base/$service/helm/templates/service.yaml"
@@ -127,6 +134,24 @@ spec:
       name: http
   selector:
     {{- include "testme.selectorLabels" . | nindent 4 }}
+EOF
+
+        cat <<EOF > "kustomize/base/$service/helm/templates/configmap.yaml"
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Custom Nginx Page</title>
+    </head>
+    <body>
+      <h1>Welcome to My Custom Nginx Page!</h1>
+    </body>
+    </html>
 EOF
     done
 }
