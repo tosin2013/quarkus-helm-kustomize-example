@@ -135,7 +135,6 @@ generate_helm_output() {
     for service in "${microservices[@]}"; do
         echo "Generating Helm output for $service"
         helm template "$service" "kustomize/base/$service/helm" > "kustomize/base/$service/backend.yaml"
-        helm template "$service" "kustomize/base/$service/helm" > "kustomize/base/$service/service.yaml"
     done
 }
 
@@ -146,7 +145,6 @@ add_service_configuration() {
         cat <<EOF > "kustomize/base/$service/kustomization.yaml"
 resources:
   - backend.yaml
-  - service.yaml
 EOF
     done
 }
