@@ -52,6 +52,15 @@ service:
   port: 80
 EOF
 
+        # Add Chart.yaml
+        cat <<EOF > kustomize/base/$service/helm/Chart.yaml
+apiVersion: v2
+name: $service
+description: A Helm chart for Kubernetes
+version: 0.1.0
+appVersion: "1.0"
+EOF
+
         # Add _helpers.tpl
         mkdir -p kustomize/base/$service/helm/templates
         cat <<EOF > kustomize/base/$service/helm/templates/_helpers.tpl
