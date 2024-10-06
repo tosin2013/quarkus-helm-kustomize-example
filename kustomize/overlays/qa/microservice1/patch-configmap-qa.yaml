@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qa-custom-nginx-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Custom Nginx Page for QA</title>
+    </head>
+    <body>
+      <h1>Welcome to My Custom Nginx Page for QA!</h1>
+    </body>
+    </html>
