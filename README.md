@@ -99,13 +99,7 @@ kustomize build kustomize/overlays/prod/microservice1
 kustomize build kustomize/overlays/prod/microservice2
 ```
 
-2. Push changes to git 
-```bash
-git add kustomize/   
-git commit -m "Add new charts"
-```
-
-3. Optional: deploy services manually
+2. Optional: deploy services manually
 ```bash
 kustomize build kustomize/overlays/dev/microservice1 | oc apply -f -
 kustomize build kustomize/overlays/dev/microservice2 | oc apply -f -
@@ -117,10 +111,13 @@ kustomize build kustomize/overlays/prod/microservice2 | oc apply -f -
 
 ### Exercise 7: Deploy via ArgoCD application 
 
-1. Sync the ArgoCD applications:
-   ```bash
-   argocd app sync -l app.kubernetes.io/instance=your-app-name
-   ```
+1.  Push changes to git 
+```bash
+git add kustomize/   
+git commit -m "Add new files"
+```
+
+
 
 ### Exercise 8: Validate the Generated Charts and Manifests
 
