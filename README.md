@@ -139,6 +139,16 @@ oc apply -f result/apps/prod/microservice2-argocd-app.yaml
 ![20241006101321](https://i.imgur.com/DR7igkN.png)
 
 ### Exercise 8: Validate the Generated Charts and Manifests
+1. Edit patch-configmap.yaml in any environment then push changes to git
+```bash 
+vim kustomize/overlays/dev/microservice1/patch-configmap.yaml
+git add kustomize/overlays/dev/microservice1/patch-configmap.yaml
+git commit -m "Update configmap"
+git push origin main
+```
+
+2. Sync the Changes in argocd
+3. Validate the changes in the application
 
 ### Testing the application manifests
 
