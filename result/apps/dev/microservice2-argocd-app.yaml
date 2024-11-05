@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: microservice2-dev
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: https://openshift-gitops-server-openshift-gitops.apps.cluster-b2c8s.b2c8s.sandbox2594.opentlc.com
+    targetRevision: HEAD
+    path: kustomize/overlays/dev/microservice2
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev-namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
